@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <ucontext.h>
 #include <sys/time.h>
+#include <stdatomic.h>
+
+typedef uint mypthread_t;
 
 enum thread_state
 {
@@ -34,9 +37,6 @@ enum thread_lock_state
 	LOCKED
 };
 
-typedef uint mypthread_t;
-
-	/* add important states in a thread control block */
 typedef struct threadControlBlock
 {
 	// YOUR CODE HERE	
@@ -48,19 +48,55 @@ typedef struct threadControlBlock
 	// thread priority
 	// And more ...
 
+	mypthread_t id;
+	enum status status;
+	ucontext_t *mpt_cntxt;
+	int priority;	
+	struct timeval time;
+	int quantum;
+	void *value_ptr;
+	int yield;
+
 } tcb;
 
 /* mutex struct definition */
 typedef struct mypthread_mutex_t
 {
-
-	// YOUR CODE HERE
+	atomic_flag lock;
+	struct Queue *blocked_queue;
 	
 } mypthread_mutex_t;
 
 
 // Feel free to add your own auxiliary data structures (linked list or queue etc...)
+typedef struct QNode
+{
+	tcb *tcb;
+	struct QNode *next;
+} qnode;
 
+typedef struct Queue
+{
+	struct QNode *front, *rear;
+} queue;
+
+struct QNode *newNode(tcb *item);
+
+struct Queue *createQueue();
+
+void enqueue(struct Queue *q, tcb *item);
+
+tcb *dequeue(struct Queue *q);
+
+static void schedule();
+static void sched_rr(int interval_ms);
+static void sched_PSJF();
+static void handler();
+static void blockSignalProf(sigset_t *set);
+static void unblockSignalProf(sigset_t *set);
+static void stoptimer();
+static void runtimer(int interval_ms);
+queue PriorityArray[4];
 
 
 /* Function Declarations: */
